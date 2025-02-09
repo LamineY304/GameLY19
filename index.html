@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Videojuego de Preguntas 2D</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url('img/istockphoto-1219023440-612x612.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+    }
+
+    #game-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    #question-container {
+      background: #333;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      width: 80%;
+      max-width: 600px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    #question {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #ffd700;
+    }
+
+    .answer {
+      display: block;
+      margin: 10px 0;
+      padding: 15px;
+      background: linear-gradient(45deg, #1e90ff, #6a5acd);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+    }
+
+    .answer:hover {
+      background: linear-gradient(45deg, #6a5acd, #1e90ff);
+      transform: translateY(-5px);
+    }
+
+    #feedback {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    #character {
+      margin-top: 30px;
+      width: 80px;
+      animation: jump 0.5s ease-in-out;
+    }
+
+    @keyframes jump {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-30px);
+      }
+    }
+
+    #cookie-container {
+      display: none;
+      text-align: center;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    #cookie-message {
+      font-size: 28px;
+      color: #ffd700;
+      margin-bottom: 20px;
+    }
+
+    #cookie-image {
+      width: 150px;
+    }
+
+    #return-button {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 20px;
+      font-size: 18px;
+      color: #fff;
+      background: #ff4500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #return-button:hover {
+      background: #ff6347;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="question-container">
+      <p id="question">Loading...</p>
+      <button class="answer" data-correct="false">Answer 1</button>
+      <button class="answer" data-correct="false">Answer 2</button>
+      <button class="answer" data-correct="false">Answer 3</button>
+      <button class="answer" data-correct="false">Answer 4</button>
+      <p id="feedback"></p>
+    </div>
+    <img id="character" src="img/Screenshot_20220220-112900_TikTok.jpg" alt="Character">
+    <div id="cookie-container">
+      <p id="cookie-message">¡Bien hecho! Toma una galletita 🍪</p>
+      <img id="cookie-image" src="img/galleta.png" alt="Galleta">
+      <button id="return-button" onclick="restartGame()">Volver</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        text: "¿Esta disciplina se desarrolló en el transcurso de la Segunda Guerra Mundial?",
+        answers: [
+          "Sí, debido a la necesidad de estrategias comunicativas",
+          "No, comenzó después de la guerra",
+          "Se desarrolló solo en Europa",
+          "Nunca estuvo relacionada con la guerra",
+        ],
+        correct: 0,
+      },
+      {
+        text: "¿Por qué se deseaba volver a los textos clásicos para el estudio de la oratoria y la retórica?",
+        answers: [
+          "Por el prestigio histórico de estos textos",
+          "Porque proporcionaban principios básicos",
+          "Porque eran más fáciles de entender",
+          "Porque estaban disponibles en todo el mundo",
+        ],
+        correct: 1,
+      },
+      {
+        text: "¿Por qué hubo un punto en que se estancó el estudio de la comunicación durante medio siglo?",
+        answers: [
+          "Falta de interés académico",
+          "Conflictos entre escuelas",
+          "Prioridades bélicas y tecnológicas",
+          "Censura global",
+        ],
+        correct: 2,
+      },
+    ];
+
+    let currentQuestion = 0;
+    const questionElement = document.getElementById("question");
+    const answerButtons = document.querySelectorAll(".answer");
+    const feedbackElement = document.getElementById("feedback");
+    const characterElement = document.getElementById("character");
+    const cookieContainer = document.getElementById("cookie-container");
+
+    function loadQuestion() {
+      const question = questions[currentQuestion];
+      questionElement.textContent = question.text;
+      answerButtons.forEach((button, index) => {
+        button.textContent = question.answers[index];
+        button.dataset.correct = index === question.correct;
+      });
+    }
+
+    function handleAnswer(event) {
+      const isCorrect = event.target.dataset.correct === "true";
+      feedbackElement.textContent = isCorrect
+        ? "¡Correcto!"
+        : "Respuesta incorrecta. Intenta de nuevo.";
+      feedbackElement.style.color = isCorrect ? "#28a745" : "#dc3545";
+
+      if (isCorrect) {
+        characterElement.src = "img/Screenshot_20220220-112900_TikTok.jpg"; // Cambiar apariencia del personaje
+        setTimeout(() => {
+          currentQuestion++;
+          if (currentQuestion < questions.length) {
+            loadQuestion();
+            feedbackElement.textContent = "";
+            characterElement.src = "img/Screenshot_20220220-112900_TikTok.jpg";
+          } else {
+            showCookie();
+          }
+        }, 1000);
+      }
+    }
+
+    function showCookie() {
+      document.getElementById("question-container").style.display = "none";
+      characterElement.style.display = "none";
+      cookieContainer.style.display = "block";
+    }
+
+    function restartGame() {
+      currentQuestion = 0;
+      loadQuestion();
+      document.getElementById("question-container").style.display = "block";
+      characterElement.style.display = "block";
+      cookieContainer.style.display = "none";
+      feedbackElement.textContent = "";
+      characterElement.src = "img/Screenshot_20220220-112900_TikTok.jpg";
+    }
+
+    answerButtons.forEach((button) => {
+      button.addEventListener("click", handleAnswer);
+    });
+
+    loadQuestion();
+  </script>
+</body>
+</html>
